@@ -29,7 +29,6 @@ public class Reservation {
         this.status = "ativa";
     }
 
-    // Getters e Setters
 
     public Long getId() {
         return id;

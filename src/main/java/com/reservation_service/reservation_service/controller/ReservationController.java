@@ -1,31 +1,32 @@
 package com.reservation_service.reservation_service.controller;
 
 import com.reservation_service.reservation_service.model.Reservation;
-import com.reservation_service.reservation_service.service.ReservationService;
+import com.reservation_service.reservation_service.model.BookResponseDTO;
+import com.reservation_service.reservation_service.repository.ReservationRepository;
+import com.reservation_service.reservation_service.service.BookServiceClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/reservations")
 public class ReservationController {
 
     @Autowired
-    private ReservationService reservationService;
+    private ReservationRepository reservationRepository;
+
+    @Autowired
+    private BookServiceClient bookServiceClient;
 
     @PostMapping
-    public Reservation criarReserva(@RequestBody Reservation reserva) {
-        return reservationService.criarReserva(reserva);
-    }
+    public ResponseEntity<?> criarReserva(@RequestBody Reservation reservation) {
+        BookResponseDTO livro = bookServiceClient.buscarLivroPorId(reservation.getBookId());
+        if (livro == null || !"disponível".equalsIgnoreCase(livro.getStatus())) {
+            return ResponseEntity.badRequest().body("Livro não disponível para reserva.");
+        }
+        Reservation novaReserva = reservationRepository.save(reservation);
+        bookServiceClient.atualizarStatusLivro(reservation.getBookId(), "reservado");
 
-    @GetMapping("/user/{userId}")
-    public List<Reservation> listarReservasPorUsuario(@PathVariable Long userId) {
-        return reservationService.listarReservasPorUsuario(userId);
-    }
-
-    @DeleteMapping("/{id}")
-    public void cancelarReserva(@PathVariable Long id) {
-        reservationService.cancelarReserva(id);
+        return ResponseEntity.ok(novaReserva);
     }
 }
