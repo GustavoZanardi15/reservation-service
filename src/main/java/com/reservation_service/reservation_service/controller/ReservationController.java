@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/reservations")
 public class ReservationController {
@@ -29,4 +31,14 @@ public class ReservationController {
 
         return ResponseEntity.ok(novaReserva);
     }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> listarReservasPorUsuario(@PathVariable Long userId) {
+        List<Reservation> reservas = reservationRepository.findByUserId(userId);
+        if (reservas.isEmpty()) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(reservas);
+    }
+
 }
