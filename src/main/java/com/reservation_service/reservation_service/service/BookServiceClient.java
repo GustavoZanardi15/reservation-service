@@ -2,8 +2,12 @@ package com.reservation_service.reservation_service.service;
 
 import com.reservation_service.reservation_service.model.BookResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.Map;
 
 @Service
 public class BookServiceClient {
@@ -22,6 +26,9 @@ public class BookServiceClient {
 
     public void atualizarStatusLivro(Long id, String novoStatus) {
         String url = bookServiceUrl + "/" + id + "/status";
-        restTemplate.patchForObject(url, novoStatus, Void.class);
+        Map<String, String> payload = Map.of("status", novoStatus);
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(payload);
+        restTemplate.exchange(url, HttpMethod.PATCH, request, Void.class);
     }
+
 }
