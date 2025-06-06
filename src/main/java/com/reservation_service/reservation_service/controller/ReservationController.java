@@ -41,4 +41,18 @@ public class ReservationController {
         return ResponseEntity.ok(reservas);
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> cancelarReserva(@PathVariable Long id) {
+        Reservation reserva = reservationRepository.findById(id).orElse(null);
+        if (reserva == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        reservationRepository.deleteById(id);
+        bookServiceClient.atualizarStatusLivro(reserva.getBookId(), "disponível");
+
+        return ResponseEntity.ok("Reserva cancelada com sucesso.");
+    }
+
+
 }
