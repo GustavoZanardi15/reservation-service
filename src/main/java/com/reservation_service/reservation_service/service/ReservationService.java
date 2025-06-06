@@ -1,5 +1,6 @@
 package com.reservation_service.reservation_service.service;
 
+import com.reservation_service.reservation_service.model.BookResponseDTO;
 import com.reservation_service.reservation_service.model.Reservation;
 import com.reservation_service.reservation_service.repository.ReservationRepository;
 import org.springframework.stereotype.Service;
@@ -11,22 +12,23 @@ import java.util.List;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
-    private final BookClient bookClient;
+    private final BookServiceClient bookClient;
 
-    public ReservationService(ReservationRepository repository, BookClient bookClient) {
+    public ReservationService(ReservationRepository repository, BookServiceClient bookClient) {
         this.reservationRepository = repository;
         this.bookClient = bookClient;
     }
 
     public Reservation createReservation(Reservation reservation) {
-        if (!bookClient.isBookAvailable(reservation.getBookId())) {
+        BookResponseDTO livro = bookClient.buscarLivroPorId(reservation.getBookId());
+        if (livro == null || !"disponível".equalsIgnoreCase(livro.getStatus())) {
             throw new RuntimeException("Livro não disponível para reserva.");
         }
 
         reservation.setStatus("ativa");
         reservation.setDataReserva(LocalDate.now());
         Reservation saved = reservationRepository.save(reservation);
-        bookClient.updateBookStatus(reservation.getBookId(), "reservado");
+        bookClient.atualizarStatusLivro(reservation.getBookId(), "reservado");
         return saved;
     }
 
@@ -34,7 +36,7 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Reserva não encontrada"));
         reservationRepository.deleteById(id);
-        bookClient.updateBookStatus(reservation.getBookId(), "disponível");
+        bookClient.atualizarStatusLivro(reservation.getBookId(), "disponível");
     }
 
     public List<Reservation> getReservationsByUserId(Long userId) {
